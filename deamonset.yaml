@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+  namespace: hello
+spec:
+  selector:
+    app: hello
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  # clusterIP: 10.96.0.239
+  type: LoadBalancer
+  externalIPs:
+    - 192.168.49.2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hello
+  namespace: hello
+spec:
+  selector:
+    matchLabels:
+      app: hello
+  serviceName: hello
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+          name: hello
+        volumeMounts:
+          - name: data
+            mountPath: /var/data
+        # - name: www
+        #   mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  # - metadata:
+  #     name: www
+  #   spec:
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     storageClassName: "my-storage-class"
+  #     resources:
+  #       requests:
+  #         storage: 1Gi
+    - metadata:
+        name: data
+      spec:
+        resources:
+          requests:
+            storage: 1Mi
+        accessModes:
+          - ReadWriteOnce
